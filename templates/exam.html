@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Exam - Quiz Machine{% endblock %}
+
+{% block head %}
+<style>
+    .timer-bar {
+        position: fixed;
+        top: 56px;
+        left: 0;
+        right: 0;
+        z-index: 1030;
+        background: #fff;
+        border-bottom: 1px solid #dee2e6;
+        padding: 8px 0;
+    }
+    .timer-bar .timer-text {
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+    .timer-bar .timer-text.warning { color: #dc3545; }
+    body { padding-top: 50px; }
+    .question-card { scroll-margin-top: 120px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="timer-bar">
+    <div class="container d-flex justify-content-between align-items-center">
+        <span>Answered: <span id="answered-count">0</span> / {{ questions|length }}</span>
+        <span class="timer-text" id="timer">--:--</span>
+    </div>
+</div>
+
+<form id="exam-form" method="POST" action="{{ url_for('exam_submit') }}">
+    {% for q in questions %}
+    <div class="card mb-3 question-card" id="question-{{ q.id }}">
+        <div class="card-body">
+            <h5 class="card-title">{{ loop.index }}. {{ q.text }}</h5>
+            {% for key in ['a', 'b', 'c', 'd'] %}
+            <div class="form-check">
+                <input class="form-check-input answer-radio"
+                       type="radio"
+                       name="q_{{ q.id }}"
+                       id="q_{{ q.id }}_{{ key }}"
+                       value="{{ key }}"
+                       {% if answers.get(q.id|string) == key %}checked{% endif %}>
+                <label class="form-check-label" for="q_{{ q.id }}_{{ key }}">
+                    {{ q['option_' + key] }}
+                </label>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+
+    <div class="text-center mb-5">
+        <button type="submit" class="btn btn-success btn-lg" id="submit-btn">Submit Exam</button>
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const REMAINING = {{ remaining }};
+    const SAVE_URL = "{{ url_for('exam_save') }}";
+</script>
+<script src="{{ url_for('static', filename='exam.js') }}"></script>
+{% endblock %}

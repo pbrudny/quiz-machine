@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Edit Question - Quiz Machine{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <h2 class="mb-4">Edit Question #{{ question.id }}</h2>
+        <form method="POST">
+            <div class="mb-3">
+                <label class="form-label">Question text</label>
+                <textarea class="form-control" name="text" rows="3" required>{{ question.text }}</textarea>
+            </div>
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">A</label>
+                    <input type="text" class="form-control" name="option_a" value="{{ question.option_a }}" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">B</label>
+                    <input type="text" class="form-control" name="option_b" value="{{ question.option_b }}" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">C</label>
+                    <input type="text" class="form-control" name="option_c" value="{{ question.option_c }}" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">D</label>
+                    <input type="text" class="form-control" name="option_d" value="{{ question.option_d }}" required>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Correct answer</label>
+                <select class="form-select" name="correct" style="width: auto" required>
+                    {% for key in ['a', 'b', 'c', 'd'] %}
+                    <option value="{{ key }}" {% if question.correct == key %}selected{% endif %}>{{ key|upper }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Save</button>
+            <a href="{{ url_for('teacher_questions') }}" class="btn btn-outline-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

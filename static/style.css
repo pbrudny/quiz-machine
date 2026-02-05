@@ -1,0 +1,19 @@
+body {
+    background-color: #f8f9fa;
+}
+
+.card {
+    border-radius: 8px;
+}
+
+.question-card .form-check {
+    padding: 6px 0 6px 2em;
+}
+
+.question-card .form-check-label {
+    cursor: pointer;
+}
+
+.question-card .form-check-input:checked + .form-check-label {
+    font-weight: 600;
+}

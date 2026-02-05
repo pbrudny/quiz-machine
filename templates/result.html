@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Result - Quiz Machine{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow mt-4">
+            <div class="card-body text-center p-4">
+                <h2>Exam Result</h2>
+                <p class="text-muted">{{ exam.student_email }} ({{ exam.student_index }})</p>
+
+                {% set pct = (exam.score / exam.total * 100)|round(1) if exam.total else 0 %}
+                <div class="display-4 my-3 {% if exam.passed %}text-success{% else %}text-danger{% endif %}">
+                    {{ exam.score }} / {{ exam.total }}
+                </div>
+                <p class="fs-5">{{ pct }}%</p>
+                {% if exam.passed %}
+                    <span class="badge bg-success fs-5 px-4 py-2">PASSED</span>
+                {% else %}
+                    <span class="badge bg-danger fs-5 px-4 py-2">FAILED</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <h4 class="mt-4">Answer Details</h4>
+        {% for q in questions %}
+        {% set qid = q.id|string %}
+        {% set student_answer = answers.get(qid) %}
+        {% set is_correct = student_answer == q.correct %}
+        <div class="card mb-2 border-{{ 'success' if is_correct else 'danger' }}">
+            <div class="card-body">
+                <h6>{{ loop.index }}. {{ q.text }}</h6>
+                {% for key in ['a', 'b', 'c', 'd'] %}
+                    <div class="{% if key == q.correct %}text-success fw-bold{% endif %}{% if key == student_answer and not is_correct %} text-danger text-decoration-line-through{% endif %}">
+                        {{ key|upper }}) {{ q['option_' + key] }}
+                        {% if key == q.correct %} &#10003;{% endif %}
+                        {% if key == student_answer and not is_correct %} &#10007; (your answer){% endif %}
+                    </div>
+                {% endfor %}
+                {% if not student_answer %}
+                    <div class="text-muted fst-italic mt-1">No answer</div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="text-center my-4">
+            <a href="{{ url_for('index') }}" class="btn btn-outline-primary">Back</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

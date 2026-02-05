@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Questions - Quiz Machine{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Questions ({{ questions|length }})</h2>
+    <div>
+        <a href="{{ url_for('teacher_questions_csv') }}" class="btn btn-outline-secondary btn-sm">Export CSV</a>
+    </div>
+</div>
+
+<!-- CSV Upload -->
+<div class="card mb-4">
+    <div class="card-body">
+        <h5>Import from CSV</h5>
+        <form method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="action" value="csv_upload">
+            <div class="input-group">
+                <input type="file" class="form-control" name="csv_file" accept=".csv" required>
+                <button class="btn btn-outline-primary" type="submit">Import</button>
+            </div>
+            <small class="text-muted">Columns: text, option_a, option_b, option_c, option_d, correct</small>
+        </form>
+    </div>
+</div>
+
+<!-- Add Question -->
+<div class="card mb-4">
+    <div class="card-body">
+        <h5>Add Question</h5>
+        <form method="POST">
+            <input type="hidden" name="action" value="add">
+            <div class="mb-2">
+                <label class="form-label">Question text</label>
+                <textarea class="form-control" name="text" rows="2" required></textarea>
+            </div>
+            <div class="row g-2 mb-2">
+                <div class="col-md-6">
+                    <label class="form-label">A</label>
+                    <input type="text" class="form-control" name="option_a" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">B</label>
+                    <input type="text" class="form-control" name="option_b" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">C</label>
+                    <input type="text" class="form-control" name="option_c" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">D</label>
+                    <input type="text" class="form-control" name="option_d" required>
+                </div>
+            </div>
+            <div class="mb-2">
+                <label class="form-label">Correct answer</label>
+                <select class="form-select" name="correct" style="width: auto" required>
+                    <option value="a">A</option>
+                    <option value="b">B</option>
+                    <option value="c">C</option>
+                    <option value="d">D</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Add</button>
+        </form>
+    </div>
+</div>
+
+<!-- Question List -->
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Question</th>
+                <th>Correct</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for q in questions %}
+            <tr>
+                <td>{{ q.id }}</td>
+                <td>{{ q.text[:100] }}{% if q.text|length > 100 %}...{% endif %}</td>
+                <td><span class="badge bg-success">{{ q.correct|upper }}</span></td>
+                <td>
+                    <a href="{{ url_for('teacher_edit_question', qid=q.id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                    <form method="POST" action="{{ url_for('teacher_delete_question', qid=q.id) }}" class="d-inline" onsubmit="return confirm('Delete this question?')">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

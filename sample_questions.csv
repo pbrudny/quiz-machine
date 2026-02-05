@@ -1,0 +1,26 @@
+text,option_a,option_b,option_c,option_d,correct
+Which protocol operates at the transport layer of the OSI model?,HTTP,TCP,IP,Ethernet,b
+What does DNS stand for?,Domain Name System,Data Network Service,Digital Name Server,Domain Network System,a
+What is the default port for HTTPS?,80,443,8080,22,b
+Which of the following is a version control system?,Docker,Git,Nginx,Redis,b
+What does SQL stand for?,Structured Query Language,System Query Logic,Standard Query Language,Sequential Query Language,a
+Which data structure operates on a FIFO basis?,Stack,Queue,Tree,Graph,b
+What is the range of Class C addresses in IPv4?,1.0.0.0 - 126.255.255.255,128.0.0.0 - 191.255.255.255,192.0.0.0 - 223.255.255.255,224.0.0.0 - 239.255.255.255,c
+Which of the following languages is compiled?,Python,JavaScript,C++,PHP,c
+What does API stand for?,Application Programming Interface,Advanced Program Integration,Application Process Interface,Automated Programming Interface,a
+Which Linux command displays the contents of a file?,ls,cat,mkdir,rm,b
+What type of database is MongoDB?,Relational,Graph,Document,Key-Value,c
+What is DHCP?,A protocol for automatic IP address assignment,A data encryption protocol,A domain name system,A file transfer protocol,a
+Which sorting algorithm has O(n log n) average time complexity?,Bubble Sort,Selection Sort,Quick Sort,Insertion Sort,c
+What does RAM stand for?,Random Access Memory,Read Access Memory,Rapid Access Memory,Random Allocation Memory,a
+Which protocol is used for sending email?,POP3,IMAP,SMTP,FTP,c
+What is a firewall?,An antivirus program,A network traffic filtering system,A network protocol,A backup system,b
+What is the result of the binary operation 1010 AND 1100?,1000,1110,0010,0110,a
+Which of the following is a stateless protocol?,FTP,HTTP,SSH,SMTP,b
+What does CSS stand for?,Cascading Style Sheets,Computer Style Sheets,Creative Style System,Cascading System Styles,a
+Which of the following is a real-time operating system?,Windows 11,Ubuntu,FreeRTOS,macOS,c
+What is the main function of a router?,Packet filtering,Forwarding packets between networks,Data storage,Data encryption,b
+What is database normalization?,Data encryption,A process of eliminating data redundancy,Database compression,Table indexing,b
+Which design pattern ensures only one instance of a class exists?,Factory,Observer,Singleton,Strategy,c
+What does SSH stand for?,Secure Shell,System Shell Host,Secure System Hub,Standard Shell Handler,a
+What is the default port for SSH?,21,22,23,25,b

@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Quiz Machine{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Dashboard</h2>
+
+<div class="row g-4">
+    <div class="col-md-3">
+        <div class="card text-center shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title text-muted">Questions</h5>
+                <p class="display-6">{{ total_questions }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title text-muted">Exams</h5>
+                <p class="display-6">{{ total_exams }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title text-muted">Passed</h5>
+                <p class="display-6 text-success">{{ passed }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title text-muted">Failed</h5>
+                <p class="display-6 text-danger">{{ failed }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if avg_score is not none %}
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5>Average Score</h5>
+                <p class="display-6">{{ "%.1f"|format(avg_score) }} pts</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5>Pass Rate</h5>
+                <p class="display-6">
+                    {% if total_exams > 0 %}
+                        {{ "%.0f"|format(passed / total_exams * 100) }}%
+                    {% else %}
+                        --
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

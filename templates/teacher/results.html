@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Results - Quiz Machine{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Exam Results ({{ exams|length }})</h2>
+    <a href="{{ url_for('teacher_results_csv') }}" class="btn btn-outline-secondary btn-sm">Export CSV</a>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Email</th>
+                <th>Student ID</th>
+                <th>Score</th>
+                <th>%</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for e in exams %}
+            <tr>
+                <td>{{ e.student_email }}</td>
+                <td>{{ e.student_index }}</td>
+                <td>{{ e.score }}/{{ e.total }}</td>
+                <td>{{ "%.0f"|format(e.score / e.total * 100) if e.total else 0 }}%</td>
+                <td>
+                    {% if e.passed %}
+                        <span class="badge bg-success">PASSED</span>
+                    {% else %}
+                        <span class="badge bg-danger">FAILED</span>
+                    {% endif %}
+                </td>
+                <td>{{ e.finished_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td><a href="{{ url_for('teacher_result_detail', exam_id=e.id) }}" class="btn btn-sm btn-outline-primary">Details</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

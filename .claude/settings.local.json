@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3:*)",
+      "Bash(source:*)",
+      "Bash(pip install:*)",
+      "Bash(curl:*)",
+      "Bash(ssh:*)",
+      "Bash(rsync:*)",
+      "Bash(gh auth status:*)"
+    ]
+  }
+}

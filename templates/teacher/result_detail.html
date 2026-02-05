@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Student Result - Quiz Machine{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <h2>Exam Result</h2>
+        <div class="card mb-4">
+            <div class="card-body">
+                <p><strong>Email:</strong> {{ exam.student_email }}</p>
+                <p><strong>Student ID:</strong> {{ exam.student_index }}</p>
+                <p><strong>Score:</strong> {{ exam.score }} / {{ exam.total }}
+                    ({{ "%.0f"|format(exam.score / exam.total * 100) if exam.total else 0 }}%)
+                </p>
+                <p><strong>Status:</strong>
+                    {% if exam.passed %}
+                        <span class="badge bg-success">PASSED</span>
+                    {% else %}
+                        <span class="badge bg-danger">FAILED</span>
+                    {% endif %}
+                </p>
+                <p><strong>Started:</strong> {{ exam.started_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                <p><strong>Finished:</strong> {{ exam.finished_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+            </div>
+        </div>
+
+        <h4>Answers</h4>
+        {% for q in questions %}
+        {% set qid = q.id|string %}
+        {% set student_answer = answers.get(qid) %}
+        {% set is_correct = student_answer == q.correct %}
+        <div class="card mb-2 border-{{ 'success' if is_correct else 'danger' }}">
+            <div class="card-body">
+                <h6>{{ loop.index }}. {{ q.text }}</h6>
+                {% for key in ['a', 'b', 'c', 'd'] %}
+                    <div class="{% if key == q.correct %}text-success fw-bold{% endif %}{% if key == student_answer and not is_correct %} text-danger text-decoration-line-through{% endif %}">
+                        {{ key|upper }}) {{ q['option_' + key] }}
+                        {% if key == q.correct %} &#10003;{% endif %}
+                        {% if key == student_answer and not is_correct %} &#10007;{% endif %}
+                    </div>
+                {% endfor %}
+                {% if not student_answer %}
+                    <div class="text-muted fst-italic mt-1">No answer</div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="my-4">
+            <a href="{{ url_for('teacher_results') }}" class="btn btn-outline-primary">Back to list</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
