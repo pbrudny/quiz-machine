@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Question Sets - Quiz Machine{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Question Sets</h2>
+
+<!-- Create Set -->
+<div class="card mb-4">
+    <div class="card-body">
+        <h5>Create New Set</h5>
+        <form method="POST">
+            <div class="input-group">
+                <input type="text" class="form-control" name="name" placeholder="e.g. Networking 101" required>
+                <button class="btn btn-primary" type="submit">Create</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Set List -->
+{% if sets %}
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Questions</th>
+                <th>Student Link</th>
+                <th>Created</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in sets %}
+            <tr>
+                <td><strong>{{ s.name }}</strong></td>
+                <td>{{ s.questions|length }}</td>
+                <td>
+                    <code class="user-select-all">{{ url_for('set_login', set_uuid=s.uuid, _external=True) }}</code>
+                </td>
+                <td>{{ s.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>
+                    <a href="{{ url_for('teacher_questions', set=s.id) }}" class="btn btn-sm btn-outline-primary">Questions</a>
+                    <form method="POST" action="{{ url_for('teacher_delete_set', set_id=s.id) }}" class="d-inline" onsubmit="return confirm('Delete this set and ALL its questions and results?')">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<p class="text-muted">No question sets yet. Create one above to get started.</p>
+{% endif %}
+{% endblock %}

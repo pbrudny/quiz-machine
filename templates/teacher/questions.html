@@ -2,18 +2,25 @@
 {% block title %}Questions - Quiz Machine{% endblock %}
 
 {% block content %}
+<!-- Set selector -->
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Questions ({{ questions|length }})</h2>
-    <div>
-        <a href="{{ url_for('teacher_questions_csv') }}" class="btn btn-outline-secondary btn-sm">Export CSV</a>
+    <div class="d-flex align-items-center gap-2">
+        <label class="form-label mb-0 fw-bold">Set:</label>
+        <select class="form-select form-select-sm" style="width: auto" onchange="window.location='{{ url_for('teacher_questions') }}?set='+this.value">
+            {% for s in sets %}
+            <option value="{{ s.id }}" {% if s.id == current_set.id %}selected{% endif %}>{{ s.name }}</option>
+            {% endfor %}
+        </select>
+        <a href="{{ url_for('teacher_questions_csv', set=current_set.id) }}" class="btn btn-outline-secondary btn-sm">Export CSV</a>
     </div>
 </div>
 
 <!-- CSV Upload -->
 <div class="card mb-4">
     <div class="card-body">
-        <h5>Import from CSV</h5>
-        <form method="POST" enctype="multipart/form-data">
+        <h5>Import from CSV into "{{ current_set.name }}"</h5>
+        <form method="POST" action="{{ url_for('teacher_questions', set=current_set.id) }}" enctype="multipart/form-data">
             <input type="hidden" name="action" value="csv_upload">
             <div class="input-group">
                 <input type="file" class="form-control" name="csv_file" accept=".csv" required>
@@ -27,8 +34,8 @@
 <!-- Add Question -->
 <div class="card mb-4">
     <div class="card-body">
-        <h5>Add Question</h5>
-        <form method="POST">
+        <h5>Add Question to "{{ current_set.name }}"</h5>
+        <form method="POST" action="{{ url_for('teacher_questions', set=current_set.id) }}">
             <input type="hidden" name="action" value="add">
             <div class="mb-2">
                 <label class="form-label">Question text</label>

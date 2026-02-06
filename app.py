@@ -10,7 +10,7 @@ from flask import (
     session, flash, Response, abort,
 )
 from config import Config
-from models import db, Question, Exam
+from models import db, QuestionSet, Question, Exam
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -71,18 +71,18 @@ def _grade_exam(exam):
     db.session.commit()
 
 
-def _get_active_exam(email, index):
-    """Find an active (unfinished, not expired) exam for this student."""
+def _get_active_exam(email, index, set_id):
+    """Find an active (unfinished, not expired) exam for this student in a given set."""
     exam = Exam.query.filter_by(
         student_email=email,
         student_index=index,
+        question_set_id=set_id,
         finished_at=None,
     ).first()
     if exam is None:
         return None
     deadline = exam.started_at + timedelta(minutes=app.config['EXAM_DURATION_MINUTES'])
     if datetime.utcnow() > deadline:
-        # Time expired — auto-grade
         _grade_exam(exam)
         return None
     return exam
@@ -94,21 +94,29 @@ def _get_active_exam(email, index):
 
 @app.route('/')
 def index():
-    return render_template('login.html')
+    return render_template('landing.html')
 
 
-@app.route('/login', methods=['POST'])
-def login():
+@app.route('/q/<set_uuid>')
+def set_login(set_uuid):
+    qs = QuestionSet.query.filter_by(uuid=set_uuid).first_or_404()
+    return render_template('login.html', question_set=qs)
+
+
+@app.route('/q/<set_uuid>/login', methods=['POST'])
+def set_login_post(set_uuid):
+    qs = QuestionSet.query.filter_by(uuid=set_uuid).first_or_404()
     email = request.form.get('email', '').strip().lower()
     index = request.form.get('index', '').strip()
     if not email or not index:
         flash('Please enter your email and student ID.', 'danger')
-        return redirect(url_for('index'))
+        return redirect(url_for('set_login', set_uuid=set_uuid))
 
-    # Check if student already finished an exam
+    # Check if student already finished an exam for this set
     finished = Exam.query.filter(
         Exam.student_email == email,
         Exam.student_index == index,
+        Exam.question_set_id == qs.id,
         Exam.finished_at.isnot(None),
     ).first()
     if finished:
@@ -116,17 +124,17 @@ def login():
         return redirect(url_for('result', exam_id=finished.id))
 
     # Resume or create
-    exam = _get_active_exam(email, index)
+    exam = _get_active_exam(email, index, qs.id)
     if exam is None:
-        # Create new exam
-        all_questions = Question.query.all()
+        all_questions = Question.query.filter_by(question_set_id=qs.id).all()
         count = min(app.config['EXAM_QUESTION_COUNT'], len(all_questions))
         if count == 0:
-            flash('No questions in the database. Please contact your instructor.', 'danger')
-            return redirect(url_for('index'))
+            flash('No questions in this exam set. Please contact your instructor.', 'danger')
+            return redirect(url_for('set_login', set_uuid=set_uuid))
         selected = random.sample(all_questions, count)
         shuffled = [_shuffle_options(q.to_dict()) for q in selected]
         exam = Exam(
+            question_set_id=qs.id,
             student_email=email,
             student_index=index,
             questions_data=json.dumps(shuffled, ensure_ascii=False),
@@ -162,12 +170,14 @@ def exam_page():
     remaining_seconds = int((deadline - now).total_seconds())
     questions = json.loads(exam.questions_data)
     answers = json.loads(exam.answers_data) if exam.answers_data else {}
+    qs = db.session.get(QuestionSet, exam.question_set_id)
     return render_template(
         'exam.html',
         questions=questions,
         answers=answers,
         remaining=remaining_seconds,
         exam_id=exam.id,
+        question_set=qs,
     )
 
 
@@ -204,7 +214,6 @@ def exam_submit():
             return redirect(url_for('result', exam_id=exam.id))
         return redirect(url_for('index'))
 
-    # Collect answers from form
     answers = {}
     questions = json.loads(exam.questions_data)
     for q in questions:
@@ -224,11 +233,13 @@ def result(exam_id):
         abort(404)
     questions = json.loads(exam.questions_data)
     answers = json.loads(exam.answers_data) if exam.answers_data else {}
+    qs = db.session.get(QuestionSet, exam.question_set_id)
     return render_template(
         'result.html',
         exam=exam,
         questions=questions,
         answers=answers,
+        question_set=qs,
     )
 
 
@@ -260,6 +271,7 @@ def teacher_dashboard():
     total_exams = Exam.query.filter(Exam.finished_at.isnot(None)).count()
     passed = Exam.query.filter_by(passed=True).count()
     failed = Exam.query.filter_by(passed=False).filter(Exam.finished_at.isnot(None)).count()
+    total_sets = QuestionSet.query.count()
     avg_score = None
     if total_exams > 0:
         exams = Exam.query.filter(Exam.finished_at.isnot(None)).all()
@@ -271,12 +283,59 @@ def teacher_dashboard():
         passed=passed,
         failed=failed,
         avg_score=avg_score,
+        total_sets=total_sets,
     )
 
+
+# --- Question Sets ---
+
+@app.route('/teacher/sets', methods=['GET', 'POST'])
+@teacher_required
+def teacher_sets():
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        if not name:
+            flash('Please enter a set name.', 'danger')
+        else:
+            qs = QuestionSet(name=name)
+            db.session.add(qs)
+            db.session.commit()
+            flash(f'Question set "{name}" created.', 'success')
+        return redirect(url_for('teacher_sets'))
+    sets = QuestionSet.query.order_by(QuestionSet.created_at.desc()).all()
+    return render_template('teacher/sets.html', sets=sets)
+
+
+@app.route('/teacher/sets/<int:set_id>/delete', methods=['POST'])
+@teacher_required
+def teacher_delete_set(set_id):
+    qs = db.session.get(QuestionSet, set_id)
+    if qs:
+        db.session.delete(qs)
+        db.session.commit()
+        flash(f'Question set "{qs.name}" deleted.', 'success')
+    return redirect(url_for('teacher_sets'))
+
+
+# --- Questions (scoped by set) ---
 
 @app.route('/teacher/questions', methods=['GET', 'POST'])
 @teacher_required
 def teacher_questions():
+    sets = QuestionSet.query.order_by(QuestionSet.name).all()
+    set_id = request.args.get('set', type=int)
+
+    if not sets:
+        flash('Create a question set first.', 'warning')
+        return redirect(url_for('teacher_sets'))
+
+    # Default to first set if none selected
+    current_set = None
+    if set_id:
+        current_set = db.session.get(QuestionSet, set_id)
+    if not current_set:
+        current_set = sets[0]
+
     if request.method == 'POST':
         action = request.form.get('action')
 
@@ -293,6 +352,7 @@ def teacher_questions():
                 flash('Correct answer must be a, b, c, or d.', 'danger')
             else:
                 q = Question(
+                    question_set_id=current_set.id,
                     text=text, option_a=option_a, option_b=option_b,
                     option_c=option_c, option_d=option_d, correct=correct,
                 )
@@ -315,6 +375,7 @@ def teacher_questions():
                         if row['correct'].strip().lower() not in ('a', 'b', 'c', 'd'):
                             continue
                         q = Question(
+                            question_set_id=current_set.id,
                             text=row['text'].strip(),
                             option_a=row['option_a'].strip(),
                             option_b=row['option_b'].strip(),
@@ -329,16 +390,25 @@ def teacher_questions():
                 except Exception as e:
                     flash(f'Import error: {e}', 'danger')
 
-        return redirect(url_for('teacher_questions'))
+        return redirect(url_for('teacher_questions', set=current_set.id))
 
-    questions = Question.query.order_by(Question.id).all()
-    return render_template('teacher/questions.html', questions=questions)
+    questions = Question.query.filter_by(question_set_id=current_set.id).order_by(Question.id).all()
+    return render_template(
+        'teacher/questions.html',
+        questions=questions,
+        sets=sets,
+        current_set=current_set,
+    )
 
 
 @app.route('/teacher/questions/csv')
 @teacher_required
 def teacher_questions_csv():
-    questions = Question.query.order_by(Question.id).all()
+    set_id = request.args.get('set', type=int)
+    query = Question.query
+    if set_id:
+        query = query.filter_by(question_set_id=set_id)
+    questions = query.order_by(Question.id).all()
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow(['text', 'option_a', 'option_b', 'option_c', 'option_d', 'correct'])
@@ -368,7 +438,7 @@ def teacher_edit_question(qid):
             q.correct = correct
         db.session.commit()
         flash('Question updated.', 'success')
-        return redirect(url_for('teacher_questions'))
+        return redirect(url_for('teacher_questions', set=q.question_set_id))
     return render_template('teacher/edit_question.html', question=q)
 
 
@@ -376,18 +446,26 @@ def teacher_edit_question(qid):
 @teacher_required
 def teacher_delete_question(qid):
     q = db.session.get(Question, qid)
+    set_id = q.question_set_id if q else None
     if q:
         db.session.delete(q)
         db.session.commit()
         flash('Question deleted.', 'success')
-    return redirect(url_for('teacher_questions'))
+    return redirect(url_for('teacher_questions', set=set_id))
 
+
+# --- Results ---
 
 @app.route('/teacher/results')
 @teacher_required
 def teacher_results():
-    exams = Exam.query.filter(Exam.finished_at.isnot(None)).order_by(Exam.finished_at.desc()).all()
-    return render_template('teacher/results.html', exams=exams)
+    set_id = request.args.get('set', type=int)
+    sets = QuestionSet.query.order_by(QuestionSet.name).all()
+    query = Exam.query.filter(Exam.finished_at.isnot(None))
+    if set_id:
+        query = query.filter_by(question_set_id=set_id)
+    exams = query.order_by(Exam.finished_at.desc()).all()
+    return render_template('teacher/results.html', exams=exams, sets=sets, current_set_id=set_id)
 
 
 @app.route('/teacher/results/<int:exam_id>')
@@ -398,25 +476,32 @@ def teacher_result_detail(exam_id):
         abort(404)
     questions = json.loads(exam.questions_data)
     answers = json.loads(exam.answers_data) if exam.answers_data else {}
+    qs = db.session.get(QuestionSet, exam.question_set_id)
     return render_template(
         'teacher/result_detail.html',
         exam=exam,
         questions=questions,
         answers=answers,
+        question_set=qs,
     )
 
 
 @app.route('/teacher/results/csv')
 @teacher_required
 def teacher_results_csv():
-    exams = Exam.query.filter(Exam.finished_at.isnot(None)).order_by(Exam.finished_at.desc()).all()
+    set_id = request.args.get('set', type=int)
+    query = Exam.query.filter(Exam.finished_at.isnot(None))
+    if set_id:
+        query = query.filter_by(question_set_id=set_id)
+    exams = query.order_by(Exam.finished_at.desc()).all()
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(['email', 'index', 'score', 'total', 'percentage', 'passed', 'started_at', 'finished_at'])
+    writer.writerow(['set', 'email', 'index', 'score', 'total', 'percentage', 'passed', 'started_at', 'finished_at'])
     for e in exams:
         pct = round(e.score / e.total * 100, 1) if e.total else 0
+        set_name = e.question_set.name if e.question_set else ''
         writer.writerow([
-            e.student_email, e.student_index, e.score, e.total,
+            set_name, e.student_email, e.student_index, e.score, e.total,
             f'{pct}%', 'YES' if e.passed else 'NO',
             e.started_at.strftime('%Y-%m-%d %H:%M'), e.finished_at.strftime('%Y-%m-%d %H:%M'),
         ])

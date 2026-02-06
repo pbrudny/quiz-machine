@@ -1,14 +1,14 @@
 {% extends "base.html" %}
-{% block title %}Login - Quiz Machine{% endblock %}
+{% block title %}{{ question_set.name }} - Quiz Machine{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-6 col-lg-5">
         <div class="card shadow mt-5">
             <div class="card-body p-4">
-                <h2 class="card-title text-center mb-4">Exam</h2>
+                <h2 class="card-title text-center mb-4">{{ question_set.name }}</h2>
                 <p class="text-muted text-center mb-4">Enter your details to start or resume the exam.</p>
-                <form method="POST" action="{{ url_for('login') }}">
+                <form method="POST" action="{{ url_for('set_login_post', set_uuid=question_set.uuid) }}">
                     <div class="mb-3">
                         <label for="email" class="form-label">Email address</label>
                         <input type="email" class="form-control" id="email" name="email" required placeholder="john.smith@student.edu">

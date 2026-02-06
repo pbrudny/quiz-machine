@@ -7,6 +7,9 @@
         <div class="card shadow mt-4">
             <div class="card-body text-center p-4">
                 <h2>Exam Result</h2>
+                {% if question_set %}
+                    <p class="text-primary fw-bold">{{ question_set.name }}</p>
+                {% endif %}
                 <p class="text-muted">{{ exam.student_email }} ({{ exam.student_index }})</p>
 
                 {% set pct = (exam.score / exam.total * 100)|round(1) if exam.total else 0 %}

@@ -7,6 +7,9 @@
         <h2>Exam Result</h2>
         <div class="card mb-4">
             <div class="card-body">
+                {% if question_set %}
+                    <p><strong>Exam Set:</strong> {{ question_set.name }}</p>
+                {% endif %}
                 <p><strong>Email:</strong> {{ exam.student_email }}</p>
                 <p><strong>Student ID:</strong> {{ exam.student_index }}</p>
                 <p><strong>Score:</strong> {{ exam.score }} / {{ exam.total }}

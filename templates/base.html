@@ -15,6 +15,7 @@
             <div class="navbar-nav ms-auto">
                 {% if session.get('is_teacher') %}
                     <a class="nav-link" href="{{ url_for('teacher_dashboard') }}">Dashboard</a>
+                    <a class="nav-link" href="{{ url_for('teacher_sets') }}">Sets</a>
                     <a class="nav-link" href="{{ url_for('teacher_questions') }}">Questions</a>
                     <a class="nav-link" href="{{ url_for('teacher_results') }}">Results</a>
                     <a class="nav-link" href="{{ url_for('teacher_logout') }}">Logout</a>

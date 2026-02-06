@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Quiz Machine{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5 text-center mt-5">
+        <h1 class="mb-3">Quiz Machine</h1>
+        <p class="text-muted mb-4">To take an exam, use the link provided by your instructor.</p>
+        <p class="mt-4">
+            <a href="{{ url_for('teacher_login') }}" class="text-muted small">Teacher panel</a>
+        </p>
+    </div>
+</div>
+{% endblock %}
